@@ -44,7 +44,7 @@ module "avi-controller" {
 	mgmt-mask	= "255.255.255.0"
 	default-gw	= "172.16.10.1"
 
-	### initial config
+	### initial config - will replace default password
 	admin-password	= "VMware1!SDDC"
 }
 ```

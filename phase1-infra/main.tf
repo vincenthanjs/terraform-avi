@@ -43,7 +43,7 @@ data "avi_cloud" "default" {
         name = "Default-Cloud"
 }
 
-## create a vip IP pool in Default-Cloud to break a circular dependency
+## create a vip IP pool in Default-Cloud to break a circular cloud_ref dependency
 ## this is required to bootstrap a network object and IP pool to create the ipam profile                                
 ## Default-Cloud is not used for service engine or virtual service placement
 resource "avi_network" "ls-vip-pool" {

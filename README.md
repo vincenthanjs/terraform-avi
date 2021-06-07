@@ -35,7 +35,7 @@ Deploys the avi controller vm to a target vcenter platform.
 ---
 
 #### [`>> phase1-infra <<`](phase1-infra/README.md)
-Configures `avi` with the following infra geometry
+Configures `avi` with the following infrastructure geometry
 
 <pre>
 vcenter-cloud

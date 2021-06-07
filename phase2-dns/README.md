@@ -27,36 +27,77 @@ cloud_name		= "tf-vmware-cloud"
 
 #### `main.tf`
 ```
-terraform {
+## provider setup
+terraform {                                                                        
 	required_providers {
-		vsphere = "~> 1.26.0"
+		avi	= {
+			source  = "vmware/avi"
+			version = ">= 20.1.5"
+		}
 	}
 }
-provider "vsphere" {
-	vsphere_server		= "vcenter.lab01.one"
-	user			= "administrator@vsphere.local"
-	password		= "VMware1!SDDC"
-	allow_unverified_ssl	= true
+provider "avi" {
+	avi_controller		= var.avi_server
+	avi_username		= var.avi_username
+	avi_password		= var.avi_password
+	avi_tenant		= "admin"
+	avi_version		= "20.1.5"
 }
 
-module "avi-controller" {
-	source		= "./module-avi-controller"
+## avi data objects
+data "avi_tenant" "admin" {
+	name	= "admin"
+}
+data "avi_cloud" "vmware" {
+	name	= var.cloud_name
+}
+data "avi_cloud" "default" {
+	name	= "Default-Cloud"
+}
+data "avi_serviceenginegroup" "mgmt" {
+	name	= "mgmt-se-group"
+}
+data "avi_applicationprofile" "system-dns" {
+	name	= "System-DNS"
+}
+data "avi_networkprofile" "system-udp-per-pkt" {
+	name	= "System-UDP-Per-Pkt"
+}
+data "avi_vrfcontext" "default" {
+	cloud_ref = data.avi_cloud.default.id
+}
+data "avi_vrfcontext" "vmware" {
+	cloud_ref = data.avi_cloud.vmware.id
+}
 
-	### vsphere variables
-	datacenter	= "lab01"
-	cluster		= "mgmt"
-	datastore	= "ds-esx15.lab01.one"
-	host		= "esx15.lab01.one"
-	network		= "pg-mgmt"
+## create the avi vip
+resource "avi_vsvip" "dns" {
+	name		= "tf-vip-ns1"
+	tenant_ref	= data.avi_tenant.admin.id
+	cloud_ref	= data.avi_cloud.vmware.id
 
-	### appliance variables
-	vm_name		= "avic.lab01.one"
-	remote_ovf_url	= "http://172.16.10.1:9000/iso/controller-20.1.5-9148.ova"
-	mgmt-ip		= "172.16.10.119"
-	mgmt-mask	= "255.255.255.0"
-	default-gw	= "172.16.10.1"
+	# static vip IP address
+	vip {
+		vip_id = "0"
+		ip_address {
+			type = "V4"
+			addr = "172.16.10.120"
+		}
+	}
+}
 
-	### initial config
-	admin-password	= "VMware1!SDDC"
+## create the dns virtual service and attach vip
+resource "avi_virtualservice" "dns1" {
+	name			= "tf-vs-ns1"
+	tenant_ref		= data.avi_tenant.admin.id
+	cloud_ref		= data.avi_cloud.vmware.id
+	vsvip_ref		= avi_vsvip.dns.id
+	application_profile_ref	= data.avi_applicationprofile.system-dns.id
+	network_profile_ref	= data.avi_networkprofile.system-udp-per-pkt.id
+	se_group_ref		= data.avi_serviceenginegroup.mgmt.id
+	enabled			= true
+	services {
+		port           = 53
+	}
 }
 ```
