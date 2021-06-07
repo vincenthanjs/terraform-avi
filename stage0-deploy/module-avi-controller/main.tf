@@ -67,6 +67,7 @@ resource "vsphere_virtual_machine" "vm" {
 
 resource "null_resource" "healthcheck" {
 	triggers = {
+		avi_addresses = vsphere_virtual_machine.vm.guest_ip_addresses[0]
 		always_run = timestamp()
 	}
 	provisioner "local-exec" {
