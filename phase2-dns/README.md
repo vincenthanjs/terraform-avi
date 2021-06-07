@@ -16,13 +16,16 @@ terraform apply
 #### `terraform.tfvars`
 ```
 # avi parameters
-avi_server		= "avic.lab01.one"
-avi_username		= "admin"
-avi_password		= "VMware1!SDDC"
-avi_version		= "20.1.5"
+avi_server	= "avic.lab01.one"
+avi_username	= "admin"
+avi_password	= "VMware1!SDDC"
+avi_version	= "20.1.5"
 
-# vcenter cloud
-cloud_name		= "tf-vmware-cloud"
+# dns service
+cloud_name	= "tf-vmware-cloud"
+vs_name		= "ns1"
+vs_fqdn		= "ns1.lb.lab01.one"
+vs_address	= "172.16.10.120"
 ```
 
 #### `main.tf`
@@ -72,7 +75,7 @@ data "avi_vrfcontext" "vmware" {
 
 ## create the avi vip
 resource "avi_vsvip" "dns" {
-	name		= "tf-vip-ns1"
+	name		= "tf-vip-${var.vs_name}"
 	tenant_ref	= data.avi_tenant.admin.id
 	cloud_ref	= data.avi_cloud.vmware.id
 
@@ -81,23 +84,24 @@ resource "avi_vsvip" "dns" {
 		vip_id = "0"
 		ip_address {
 			type = "V4"
-			addr = "172.16.10.120"
+			addr = var.vs_address
 		}
 	}
 }
 
 ## create the dns virtual service and attach vip
 resource "avi_virtualservice" "dns1" {
-	name			= "tf-vs-ns1"
+	name			= "tf-vs-${var.vs_name}"
+	fqdn			= var.vs_fqdn
 	tenant_ref		= data.avi_tenant.admin.id
 	cloud_ref		= data.avi_cloud.vmware.id
 	vsvip_ref		= avi_vsvip.dns.id
 	application_profile_ref	= data.avi_applicationprofile.system-dns.id
 	network_profile_ref	= data.avi_networkprofile.system-udp-per-pkt.id
 	se_group_ref		= data.avi_serviceenginegroup.mgmt.id
-	enabled			= true
 	services {
-		port           = 53
+		port = 53
 	}
+	enabled			= true
 }
 ```
