@@ -64,3 +64,84 @@ resource "vsphere_virtual_machine" "vm" {
 		}
 	}
 }
+
+resource "null_resource" "healthcheck" {
+	triggers = {
+		always_run = timestamp()
+	}
+	provisioner "local-exec" {
+		interpreter = ["/bin/bash", "-c"]
+		command = <<-EOT
+			CSRFREGEX='csrftoken=([A-Za-z0-9]+)'
+			while [[ -z $CSRFTOKEN ]]; do
+				CSRFHEADER=$(curl -kvs -X GET "https://avic.lab01.one" 2>&1 | grep -i set-cookie | grep csrftoken)
+				if [[ $CSRFHEADER =~ $CSRFREGEX ]]; then
+					CSRFTOKEN=$${BASH_REMATCH[1]}
+					printf "%s\n" "X-CSRFToken [[ $CSRFTOKEN ]]"
+				else
+					printf "%s\n" "Waiting for API to respond.. sleep 30"
+					sleep 30
+				fi
+			done
+		EOT
+	}
+}
+
+resource "null_resource" "updateuser" {
+	triggers = {
+		avi-endpoint = "avic.lab01.one"
+		admin-password = var.admin-password
+		always_run = timestamp()
+	}
+	provisioner "local-exec" {
+		interpreter = ["/bin/bash", "-c"]
+		command = <<-EOT
+			## login
+			AVIUSER="admin"
+			NEWPASS="${self.triggers.admin-password}"
+			OLDPASS="58NFaGDJm(PJH0G"
+			ENDPOINT="${self.triggers.avi-endpoint}"
+			LOGINHEADERS=$(curl -kvs -X POST \
+				--data-urlencode "username=$AVIUSER" \
+				--data-urlencode "password=$OLDPASS" \
+			"https://$ENDPOINT/login" 2>&1 | grep -i set-cookie)
+			
+			## get cookies
+			CSRFREGEX='csrftoken=([A-Za-z0-9]+)'
+			if [[ $LOGINHEADERS =~ $CSRFREGEX ]]; then
+				CSRFTOKEN=$${BASH_REMATCH[1]}
+			fi
+			printf "%s\n" "X-CSRFToken	[[ $CSRFTOKEN ]]"
+			SESSIONREGEX='avi-sessionid\=([A-Za-z0-9]+)'
+			if [[ $LOGINHEADERS =~ $SESSIONREGEX ]]; then
+				SESSIONID=$${BASH_REMATCH[1]}
+			fi
+			printf "%s\n" "avi-sessionid	[[ $SESSIONID ]]"
+			
+			## update password
+			if [[ -n "$CSRFTOKEN" && -n "$SESSIONID" ]]; then
+				read -r -d '' BODY <<-CONFIG
+				{
+					"username": "$AVIUSER",
+					"password": "$NEWPASS",
+					"old_password": "$OLDPASS"
+				}
+				CONFIG
+				curl -ks -X PUT \
+					-b "sessionid=$SESSIONID;csrftoken=$CSRFTOKEN" \
+					-H "Referer: https://avic.lab01.one" \
+					-H "X-Avi-Version: 20.1.5" \
+					-H "X-CSRFToken: $CSRFTOKEN" \
+					-H "Content-Type: application/json" \
+					--data "$BODY" \
+				"https://$ENDPOINT/api/useraccount"
+				echo "user [ $AVIUSER ] updated with password [ $NEWPASS ]"
+			else
+				echo "CSRFTOKEN or SESSIONID missing - check credentials"
+			fi
+		EOT
+	}
+	depends_on = [
+		null_resource.healthcheck
+	]		
+}

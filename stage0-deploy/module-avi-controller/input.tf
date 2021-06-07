@@ -11,3 +11,7 @@ variable "remote_ovf_url" {}
 variable "mgmt-ip" {}
 variable "mgmt-mask" {}
 variable "default-gw" {}
+
+### initial config
+variable "admin-password" {}
+
