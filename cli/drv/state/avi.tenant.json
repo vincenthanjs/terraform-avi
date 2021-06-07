@@ -1,0 +1,11 @@
+{
+	"count": 1,
+	"results": [
+		{
+			"url": "https://avic.lab01.one/api/tenant/admin",
+			"uuid": "admin",
+			"name": "admin",
+			"local": true
+		}
+	]
+}

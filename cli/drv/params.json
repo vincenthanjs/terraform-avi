@@ -1,0 +1,13 @@
+{
+	"dns": "172.16.10.1",
+	"domain": "lab",
+	"endpoints": [
+		{
+			"type": "avi",
+			"hostname": "avic.lab01.one",
+			"username": "admin",
+			"password": "VMware1!SDDC",
+			"online": "true"
+		}
+	]
+}
