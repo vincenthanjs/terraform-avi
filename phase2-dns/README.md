@@ -94,6 +94,11 @@ resource "avi_vsvip" "dns" {
 			addr = var.vs_address
 		}
 	}
+	# dns domain name
+	dns_info {
+		fqdn	= var.vs_fqdn
+		ttl	= 30
+	}
 }
 
 ## create the dns virtual service and attach vip

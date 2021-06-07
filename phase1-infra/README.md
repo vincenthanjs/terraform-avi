@@ -50,7 +50,7 @@ vcenter_configuration	= {
 terraform {                                                                        
 	required_providers {
 		vsphere	= "~> 1.26.0"
-		avi	= {
+		avi 	= {
 			source  = "vmware/avi"
 			version = ">= 20.1.5"
 		}
