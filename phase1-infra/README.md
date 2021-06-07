@@ -11,6 +11,13 @@ terraform plan
 terraform apply
 ```
 
+#### `destroy` [optional]
+```
+terraform destroy
+```
+
+---
+
 #### `terraform.tfvars`
 ```
 # vsphere parameters

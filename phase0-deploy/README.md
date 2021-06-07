@@ -13,6 +13,13 @@ terraform apply
 
 **Note: After completing this `plan` you must login and complete the one-time welcome setup workflow**
 
+#### `destroy` [optional]
+```
+terraform destroy
+```
+
+---
+
 #### `main.tf`
 ```
 terraform {

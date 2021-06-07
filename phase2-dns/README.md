@@ -13,6 +13,13 @@ terraform apply
 
 **Note: After completing this `plan` you must login and enable `Administration > Settings > DNS Service`**
 
+#### `destroy` [optional]
+```
+terraform destroy
+```
+
+---
+
 #### `terraform.tfvars`
 ```
 # avi parameters
