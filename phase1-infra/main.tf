@@ -1,3 +1,4 @@
+## provider setup
 terraform {                                                                        
 	required_providers {
 		vsphere	= "~> 1.26.0"
@@ -7,16 +8,14 @@ terraform {
 		}
 	}
 }
-
 provider "vsphere" {
-	vsphere_server		= "vcenter.lab01.one"
-	user			= "administrator@vsphere.local"
-	password		= "VMware1!SDDC"
+	vsphere_server		= var.vcenter_server
+	user			= var.vcenter_username
+	password		= var.vcenter_password
 	allow_unverified_ssl	= true
 }
-
 provider "avi" {
-	avi_controller		= var.avi_controller
+	avi_controller		= var.avi_server
 	avi_username		= var.avi_username
 	avi_password		= var.avi_password
 	avi_tenant		= "admin"
@@ -27,12 +26,10 @@ provider "avi" {
 data "vsphere_datacenter" "datacenter" {
 	name          = var.datacenter
 }
-
 data "vsphere_compute_cluster" "cmp" {
 	name          = "cmp"
 	datacenter_id = data.vsphere_datacenter.datacenter.id
 }
-
 data "vsphere_compute_cluster" "mgmt" {
 	name          = "mgmt"
 	datacenter_id = data.vsphere_datacenter.datacenter.id
@@ -40,54 +37,15 @@ data "vsphere_compute_cluster" "mgmt" {
 
 ## avi objects
 data "avi_tenant" "tenant" {
-	name = var.tenant
+	name = "admin"
 }
-
 data "avi_cloud" "default" {
-        name		= "Default-Cloud"
+        name = "Default-Cloud"
 }
 
-#resource "avi_systemconfiguration" "default" {
-#	uuid	= "default"
-#	dns_configuration {
-#		search_domain = "lab01.one"
-#		server_list {
-#			addr = "172.16.10.1"
-#			type = "V4"
-#		}
-#	}
-#	ntp_configuration {
-#		ntp_servers {
-#			key_number = 1
-#			server {
-#				addr	= "172.16.10.1"
-#				type	= "V4"
-#			}
-#		}
-#	}
-#	#dns_virtualservice_refs	= [
-#	#	data.avi_virtualservice.ns1.id
-	#]
-	#portal_configuration {
-	#	http_port			= 80
-	#	https_port			= 443
-	#	sslprofile_ref			= "https://avic.lab01.one/api/sslprofile/sslprofile-7c98e8cb-8f86-45b9-9e3b-fdb75dbd1d64"
-	#	sslkeyandcertificate_refs	= [
-	#		"https://avic.lab01.one/api/sslkeyandcertificate/sslkeyandcertificate-2987634c-1890-48e5-8863-cdd504c5eaec",
-	#		"https://avic.lab01.one/api/sslkeyandcertificate/sslkeyandcertificate-d32fbfb9-4faf-4c5a-ae5d-a9515aa2ad47"
-	#	]
-	#}
-#	welcome_workflow_complete	= true
-#	lifecycle {
-#		ignore_changes = all
-			#[
-			#ssh_ciphers,
-			#ssh_hmacs
-			#portal_configuration
-		#]
-#	}
-#}
-
+## create a vip IP pool in Default-Cloud to break a circular dependency
+## this is required to bootstrap a network object and IP pool to create the ipam profile                                
+## Default-Cloud is not used for service engine or virtual service placement
 resource "avi_network" "ls-vip-pool" {
         name			= "ls-vip-pool"
 	cloud_ref		= data.avi_cloud.default.id
@@ -117,6 +75,18 @@ resource "avi_network" "ls-vip-pool" {
 	}
 }
 
+## refer to above vip pool in ipam profile
+resource "avi_ipamdnsproviderprofile" "tf-ipam-vmw" {
+	name	= "tf-ipam-vmw"
+	type	= "IPAMDNS_TYPE_INTERNAL"
+	internal_profile {
+		usable_networks {
+			nw_ref = avi_network.ls-vip-pool.id
+		}
+	}
+}
+
+## create a dns profile
 resource "avi_ipamdnsproviderprofile" "tf-dns-vmw" {
 	name	= "tf-dns-vmw"
 	type	= "IPAMDNS_TYPE_INTERNAL_DNS"
@@ -129,16 +99,7 @@ resource "avi_ipamdnsproviderprofile" "tf-dns-vmw" {
 	}
 }
 
-resource "avi_ipamdnsproviderprofile" "tf-ipam-vmw" {
-	name	= "tf-ipam-vmw"
-	type	= "IPAMDNS_TYPE_INTERNAL"
-	internal_profile {
-		usable_networks {
-			nw_ref = avi_network.ls-vip-pool.id
-		}
-	}
-}
-
+## create a vcenter cloud and attach dns + ipam profiles
 resource "avi_cloud" "cloud" {
 	name         = var.cloud_name
 	vtype        = "CLOUD_VCENTER"
@@ -148,8 +109,7 @@ resource "avi_cloud" "cloud" {
 	dhcp_enabled = true
 	vcenter_configuration {
 		username		= var.vcenter_configuration.username
-		#password		= var.vcenter_configuration.password
-		password		= "VMware1!SDDC"
+		password		= var.vcenter_configuration.password
 		vcenter_url		= var.vcenter_configuration.vcenter_url
 		datacenter		= var.vcenter_configuration.datacenter
 		management_network	= var.vcenter_configuration.management_network
@@ -164,6 +124,7 @@ resource "avi_cloud" "cloud" {
 	}
 }
 
+## update the service engine Default-Group to map to cmp cluster
 resource "avi_serviceenginegroup" "cmp-se-group" {
 	name			= "Default-Group"
 	cloud_ref		= avi_cloud.cloud.id
@@ -180,6 +141,7 @@ resource "avi_serviceenginegroup" "cmp-se-group" {
 	}
 }
 
+## create a new service engine group and map to mgmt cluster
 resource "avi_serviceenginegroup" "mgmt-se-group" {
 	name			= "mgmt-se-group"
 	cloud_ref		= avi_cloud.cloud.id

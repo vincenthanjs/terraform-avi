@@ -1,36 +1,54 @@
 ## `terraform-avi`
-A collection of terraform plans for the AVI networks platform  
+A collection of terraform plans for the `avi networks` load-balancing platform  
 Clone repository and adjust parameters as required  
 
-#### `clone`
+---
+
+### `clone`
 ```
 git clone https://github.com/apnex/terraform-avi
 cd terraform-avi
 ```
 
-#### `parameters`
-Verify and adjust parameters of `main.tf` in each sub-directory to suit deployment target or intent
+---
 
-#### `init`
-Initialise terraform provider
-```
-terraform init
-```
+### `phases`
+This repo is organised into 3 key phases as follows:  
 
-#### `plan`
-Run plan and review changes
-```
-terraform plan
-```
+<pre>
+terraform-avi
+  &#x2523&#x2501 phase0-deploy
+  &#x2523&#x2501 phase1-infra
+  &#x2517&#x2501 phase2-dns
+</pre>
 
-#### `apply`
-Apply the plan
-```
-terraform apply
-```
+Each phase and directory represents a single atomic terraform plan for avi deployment or configuration.  
+Modify parameters as necessary in each `main.tf` and `apply` or `destroy` as required.
 
-#### `destroy` [OPTIONAL]
-Destroy resources
-```
-terraform destroy
-```
+---
+
+#### [`>> phase0-deploy <<`](phase0-deploy/README.md)
+Deploys the avi controller vm to a target vcenter platform.  
+
+**Note: After completing this `plan` you must login and complete the one-time `Welcome Setup` workflow**
+
+---
+
+#### [`>> phase1-infra <<`](phase1-infra/README.md)
+Configures `avi` with the following infra geometry
+
+<pre>
+vcenter-cloud
+ &#x2523&#x2501 ipam-profile
+ &#x2523&#x2501 dns-profile
+ &#x2517&#x2501 se-groups
+     &#x2523&#x2501 Default-Group (cmp cluster)
+     &#x2517&#x2501 mgmt-se-group (mgmt cluster)
+</pre>
+
+---
+
+#### [`>> phase2-dns <<`](phase2-dns/README.md)
+Configures a DNS virtual service in `mgmt-se-group`
+
+**Note: After completing this `plan` you must login and enable `Administration > Settings > DNS Service`**

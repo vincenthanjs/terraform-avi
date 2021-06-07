@@ -8,7 +8,7 @@ ENDPOINT="avic.lab01.one"
 LOGINHEADERS=$(curl -kvs -X POST \
 	--data-urlencode "username=${AVIUSER}" \
 	--data-urlencode "password=${AVIPASS}" \
-"https://${ENDPOINT}/login" 2>&1 | grep set-cookie)
+"https://${ENDPOINT}/login" 2>&1 | grep -i set-cookie)
 
 ## get cookies
 if [[ $LOGINHEADERS =~ csrftoken\=([A-Za-z0-9]+) ]]; then

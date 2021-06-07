@@ -1,3 +1,4 @@
+## provider setup
 terraform {                                                                        
 	required_providers {
 		avi	= {
@@ -6,9 +7,8 @@ terraform {
 		}
 	}
 }
-
 provider "avi" {
-	avi_controller		= var.avi_controller
+	avi_controller		= var.avi_server
 	avi_username		= var.avi_username
 	avi_password		= var.avi_password
 	avi_tenant		= "admin"
@@ -17,41 +17,37 @@ provider "avi" {
 
 ## avi data objects
 data "avi_tenant" "admin" {
-	name = "admin"
+	name	= "admin"
 }
 data "avi_cloud" "vmware" {
-	name = "tf-vmware-cloud"
+	name	= var.cloud_name
 }
 data "avi_cloud" "default" {
-	name = "Default-Cloud"
+	name	= "Default-Cloud"
 }
 data "avi_serviceenginegroup" "mgmt" {
-	name = "mgmt-se-group"
-}
-data "avi_analyticsprofile" "system-analytics" {
-	name = "System-Analytics-Profile"
+	name	= "mgmt-se-group"
 }
 data "avi_applicationprofile" "system-dns" {
-	name = "System-DNS"
+	name	= "System-DNS"
 }
 data "avi_networkprofile" "system-udp-per-pkt" {
-	name		= "System-UDP-Per-Pkt"
+	name	= "System-UDP-Per-Pkt"
 }
 data "avi_vrfcontext" "default" {
-	cloud_ref	= data.avi_cloud.default.id
+	cloud_ref = data.avi_cloud.default.id
 }
 data "avi_vrfcontext" "vmware" {
-	cloud_ref	= data.avi_cloud.vmware.id
+	cloud_ref = data.avi_cloud.vmware.id
 }
 
-## avi resources
+## create the avi vip
 resource "avi_vsvip" "dns" {
 	name		= "tf-vip-ns1"
 	tenant_ref	= data.avi_tenant.admin.id
 	cloud_ref	= data.avi_cloud.vmware.id
-	vrf_context_ref = data.avi_vrfcontext.vmware.id
 
-	# static vip IP
+	# static vip IP address
 	vip {
 		vip_id = "0"
 		ip_address {
@@ -61,16 +57,16 @@ resource "avi_vsvip" "dns" {
 	}
 }
 
+## create the dns virtual service and attach vip
 resource "avi_virtualservice" "dns1" {
 	name			= "tf-vs-ns1"
 	tenant_ref		= data.avi_tenant.admin.id
+	cloud_ref		= data.avi_cloud.vmware.id
 	vsvip_ref		= avi_vsvip.dns.id
-	#cloud_ref		= data.avi_cloud.default.id
-	#cloud_type		= "CLOUD_VCENTER"
 	application_profile_ref	= data.avi_applicationprofile.system-dns.id
 	network_profile_ref	= data.avi_networkprofile.system-udp-per-pkt.id
 	se_group_ref		= data.avi_serviceenginegroup.mgmt.id
-	enabled			= false
+	enabled			= true
 	services {
 		port           = 53
 	}
