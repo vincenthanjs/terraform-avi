@@ -29,7 +29,6 @@ avi_username	= "admin"
 avi_password	= "VMware1!SDDC"
 avi_controller	= "avic.lab01.one"
 avi_version	= "20.1.5"
-tenant		= "admin"
 
 # vcenter cloud configuration
 cloud_name		= "tf-vmware-cloud"

@@ -40,7 +40,7 @@ vs_address	= "172.16.10.120"
 ## provider setup
 terraform {                                                                        
 	required_providers {
-		avi	= {
+		avi = {
 			source  = "vmware/avi"
 			version = ">= 20.1.5"
 		}

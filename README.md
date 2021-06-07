@@ -29,7 +29,7 @@ Modify parameters as necessary in each `main.tf` and `apply` or `destroy` as req
 
 #### [`>> phase0-deploy <<`](phase0-deploy/README.md)
 Deploys the avi controller vm to a target `vcenter` platform.  
-This will take some time copy the ova and start the appliances services.  
+This will take some time copy the ova and start the appliance services.  
 
 **Note: After completing this `plan` you must login and complete the one-time `Welcome Setup` workflow**
 
@@ -50,7 +50,7 @@ vcenter-cloud
 ---
 
 #### [`>> phase2-dns <<`](phase2-dns/README.md)
-Configures a DNS virtual service in `mgmt-se-group`
+Configures a DNS virtual service in `mgmt-se-group`  
 This will trigger the `service-engine` vm creation in vsphere and may take some time to complete.  
 
 **Note: After completing this `plan` you must login and enable `Administration > Settings > DNS Service`**
