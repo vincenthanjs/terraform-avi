@@ -14,11 +14,11 @@ module "avi-controller" {
 	source		= "./module-avi-controller"
 
 	### vsphere variables
-	datacenter	= "lab01"
-	cluster		= "mgmt"
-	datastore	= "ds-esx15.lab01.one"
-	host		= "esx15.lab01.one"
-	network		= "pg-mgmt"
+	datacenter	= "core"
+	cluster		= "core"
+	datastore	= "ds-esx11"
+	host		= "esx11.lab01.one"
+	network		= "vss-vmnet"
 
 	### appliance variables
 	vm_name		= "avic.lab01.one"

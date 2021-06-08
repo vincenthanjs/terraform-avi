@@ -72,9 +72,9 @@ resource "null_resource" "healthcheck" {
 		avi-endpoint	= "avic.lab01.one"
 	}
 	provisioner "local-exec" {
-		interpreter = ["/bin/bash", "-c"]
-		command = "{path.module}/healthcheck.sh"
-		environment = {
+		interpreter	= ["/bin/bash", "-c"]
+		command		= "{path.module}/healthcheck.sh"
+		environment	= {
 			ENDPOINT	= self.triggers.avi-endpoint
 		}
 	}
@@ -90,7 +90,7 @@ resource "null_resource" "updateuser" {
 	provisioner "local-exec" {
 		interpreter	= ["/bin/bash", "-c"]
 		command		= "${path.module}/updateuser.sh"
-		environment = {
+		environment	= {
 			ENDPOINT	= self.triggers.avi-endpoint
 			AVIUSER		= self.triggers.avi-username
 			OLDPASS		= self.triggers.avi-oldpass
