@@ -73,7 +73,7 @@ resource "null_resource" "healthcheck" {
 	}
 	provisioner "local-exec" {
 		interpreter = ["/bin/bash", "-c"]
-		command = "healthcheck.sh"
+		command = "{path.module}/healthcheck.sh"
 		environment = {
 			ENDPOINT	= self.triggers.avi-endpoint
 		}
@@ -89,7 +89,7 @@ resource "null_resource" "updateuser" {
 	}
 	provisioner "local-exec" {
 		interpreter	= ["/bin/bash", "-c"]
-		command		= "updateuser.sh"
+		command		= "${path.module}/updateuser.sh"
 		environment = {
 			ENDPOINT	= self.triggers.avi-endpoint
 			AVIUSER		= self.triggers.avi-username
