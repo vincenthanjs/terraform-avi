@@ -73,7 +73,7 @@ resource "null_resource" "healthcheck" {
 	}
 	provisioner "local-exec" {
 		interpreter	= ["/bin/bash", "-c"]
-		command		= "{path.module}/healthcheck.sh"
+		command		= "${path.module}/healthcheck.sh"
 		environment	= {
 			ENDPOINT	= self.triggers.avi-endpoint
 		}
