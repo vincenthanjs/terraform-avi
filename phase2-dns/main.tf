@@ -65,7 +65,6 @@ resource "avi_vsvip" "dns" {
 ## create the dns virtual service and attach vip
 resource "avi_virtualservice" "dns1" {
 	name			= "tf-vs-${var.vs_name}"
-	fqdn			= var.vs_fqdn
 	tenant_ref		= data.avi_tenant.admin.id
 	cloud_ref		= data.avi_cloud.vmware.id
 	vsvip_ref		= avi_vsvip.dns.id
