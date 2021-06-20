@@ -3,7 +3,7 @@ terraform {
 	required_providers {
 		avi = {
 			source  = "vmware/avi"
-			version = ">= 20.1.5"
+			version = ">= 20.1.6"
 		}
 	}
 }
@@ -11,8 +11,8 @@ provider "avi" {
 	avi_controller		= var.avi_server
 	avi_username		= var.avi_username
 	avi_password		= var.avi_password
+	avi_version		= var.avi_version
 	avi_tenant		= "admin"
-	avi_version		= "20.1.5"
 }
 
 ## avi data objects

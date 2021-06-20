@@ -1,6 +1,6 @@
 terraform {
 	required_providers {
-		vsphere = "~> 1.26.0"
+		vsphere = "~> 2.0"
 	}
 }
 provider "vsphere" {
@@ -22,7 +22,7 @@ module "avi-controller" {
 
 	### appliance variables
 	vm_name		= "avic.lab01.one"
-	remote_ovf_url	= "http://172.16.10.1:9000/iso/controller-20.1.5-9148.ova"
+	remote_ovf_url	= "http://172.16.10.1:9000/iso/controller-20.1.6-9148.ova"
 	mgmt-ip		= "172.16.10.119"
 	mgmt-mask	= "255.255.255.0"
 	default-gw	= "172.16.10.1"
