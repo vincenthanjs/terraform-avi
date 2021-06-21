@@ -33,7 +33,7 @@ if [[ -n "$CSRFTOKEN" && -n "$SESSIONID" ]]; then
 	curl -ks -X PUT \
 		-b "sessionid=$SESSIONID;csrftoken=$CSRFTOKEN" \
 		-H "Referer: https://$ENDPOINT" \
-		-H "X-Avi-Version: 20.1.5" \
+		-H "X-Avi-Version: 20.1.6" \
 		-H "X-CSRFToken: $CSRFTOKEN" \
 		-H "Content-Type: application/json" \
 		--data "$BODY" \
